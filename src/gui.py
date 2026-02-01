@@ -3,10 +3,10 @@ import pyqtgraph as pg
 from PyQt6.QtWidgets import (QMainWindow, QVBoxLayout, QHBoxLayout, QWidget,
                              QLabel, QPushButton, QComboBox, QSpinBox, QSlider)
 from PyQt6.QtCore import QTimer, Qt
-from audio_engine import chord_player, find_note, apply_downsample
+from audio_engine import find_note
 from audio_player import AudioPlayer
 from audio_controller import PlaybackController
-from audio_loader import load_wav_file
+
 
 """
 This just deals with the visual elements of all this
@@ -140,7 +140,7 @@ class Oscilloscope(QMainWindow):
         self.downsample_slider.setMaximum(44100)
         self.downsample_slider.setValue(44100)
         self.downsample_slider.valueChanged.connect(self.update_downsample)
-        self.downsample_slider.sliderReleased.connect(lambda: self.start_playback(keep_position=True))
+        self.downsample_slider.sliderReleased.connect(lambda: self.controller.start_playback(keep_position=True))
 
         self.downsample_layout.addWidget(QLabel("downsampling:"))
         self.downsample_layout.addWidget(self.downsample_slider)
