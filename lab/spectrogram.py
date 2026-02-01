@@ -27,7 +27,7 @@ class AudioVisualizer(QMainWindow):
 
         script_dir = Path(__file__).parent.resolve()
         project_root = script_dir.parent
-        audio_path = project_root / 'assets' / 'KewGardens.wav'
+        audio_path = project_root / 'assets' / 'kewgardens.wav'
 
 
         waveform, sample_rate = librosa.load(audio_path, sr=None, mono=True)
