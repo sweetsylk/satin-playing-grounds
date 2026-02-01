@@ -48,7 +48,6 @@ class Oscilloscope(QMainWindow):
         self.play_button = QPushButton("go for it")
         self.play_button.setMinimumHeight(50)
         self.play_button.setStyleSheet("font-size: 14px; font-weight: bold; background-color: #fc1c6e; color: white;")
-        self.play_button.clicked.connect(self.start_playback)
         self.layout.addWidget(self.play_button)
 
         self._init_volume_slider()
