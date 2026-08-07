@@ -34,14 +34,21 @@ def saw_tone(frequency, duration, amplitude=0.3, sample_rate=PLAYBACK_RATE):
     return signal.sawtooth(2 * np.pi * frequency * t, 1) * amplitude
 
 
-def get_scale(root_index, scale_type):
-    start_note = 48 + root_index # c3 IS 48
+SCALE_INTERVALS = {
+    # major is WWHWWH, minor is WHWWHWW
+    "Major": [0, 2, 4, 5, 7, 9, 11],
+    "Minor": [0, 2, 3, 5, 7, 8, 10],
+}
 
-    # major is WWHWWH minor is WHWWHWW
-    if scale_type == "Major":
-        intervals = [0, 2, 4, 5, 7, 9, 11]
-    elif scale_type == "Minor":
-        intervals = [0, 2, 3, 5, 7, 8, 10]
+
+def get_scale(root_index, scale_type):
+    start_note = 48 + root_index  # c3 IS 48
+
+    intervals = SCALE_INTERVALS.get(scale_type)
+    if intervals is None:
+        raise ValueError(
+            f"Unknown scale_type {scale_type!r}; expected one of {list(SCALE_INTERVALS)}"
+        )
 
     scale = []
     for octave in range(4):
@@ -170,3 +177,29 @@ def apply_downsample(buffer, target_sample_rate, original_rate=44100):
     indexes = (np.floor(sample_indexes / step_size) * step_size).astype(int)
     indexes = np.clip(indexes, 0, len(buffer) - 1)
     return buffer[indexes]
+
+
+def apply_flanger(audio_data, sample_rate=44100, lfo_rate=0.5, depth=0.004):
+    """
+    flanger is just the combination of a dry signal with a wet signal that has a delay that is modulated with an LFO
+    """
+    t = np.arange(len(audio_data)) / sample_rate
+    lfo = (np.sin(2 * np.pi * lfo_rate * t) + 1) / 2 # our modulator
+    # calc delay at every point of the audio
+    max_delay_samples = depth * sample_rate
+    delay_in_samples = lfo * max_delay_samples
+
+    indices = np.arange(len(audio_data)) - delay_in_samples # locate delay in audio
+    valid = indices >= 0
+
+    # linear interpolation on delay
+    i = np.floor(indices).astype(int)
+    j = i + 1
+    k = indices - i
+    i_safe = np.clip(i, 0, len(audio_data) - 1)
+    j_safe = np.clip(j, 0, len(audio_data) - 1)
+
+    delayed_signal = np.zeros_like(audio_data)
+    delayed_signal[valid] = (audio_data[i_safe[valid]] * (1 - k[valid]) +
+                             audio_data[j_safe[valid]] * k[valid])
+    return (audio_data + delayed_signal) * 0.5 #  could change 0.5 into a variable with a wet/dry slider
